@@ -13,10 +13,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: `https://dev-wqm3xbhp8jmn514q.us.auth0.com/.well-known/jwks.json`,
+        jwksUri: `https://dev-36rjr75zav7uajc1.us.auth0.com/.well-known/jwks.json`,
       }),
       audience:"https://myapi.local" ,
-      issuer: 'https://dev-wqm3xbhp8jmn514q.us.auth0.com/',
+      issuer: 'https://dev-36rjr75zav7uajc1.us.auth0.com/',
       algorithms: ["RS256"],
     });
   }
