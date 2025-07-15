@@ -12,6 +12,9 @@ export class ChatSession {
   @Column({ nullable: true })
   title: string;
 
+  @Column()
+  teamId: number;
+
   @CreateDateColumn()
   createdAt: Date;
 

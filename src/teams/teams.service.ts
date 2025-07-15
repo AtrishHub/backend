@@ -27,10 +27,14 @@ export class TeamsService {
   }
 
   async getTeamsByUser(userId: string) {
-    return await this.teamRepo.find({
-      where: { userId },
-      order: { createdAt: 'DESC' }, // optional: to return latest teams first
-    });
+    // Find all team memberships for this user
+    const memberships = await this.memberRepo.find({ where: { userId } });
+    const teamIds = memberships.map(m => m.teamId);
+    if (teamIds.length === 0) return [];
+    // Find all teams where the user is a member
+    const teamsList = await this.teamRepo.findByIds(teamIds);
+    // Sort by createdAt descending
+    return teamsList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
   async addMember(teamId: number, userId: string, requesterId: string) {
@@ -62,6 +66,16 @@ export class TeamsService {
       throw new Error('User is not a member of the team');
     }
     return this.memberRepo.remove(member);
+  }
+
+  async getTeamMembers(teamId: number, requesterId: string) {
+    // Check if requester is the creator
+    const creator = await this.memberRepo.findOne({ where: { teamId, isCreator: true } });
+    if (!creator || creator.userId !== requesterId) {
+      throw new Error('Only the team creator can view members');
+    }
+    // Return all members
+    return this.memberRepo.find({ where: { teamId } });
   }
 }
 

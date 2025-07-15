@@ -28,7 +28,7 @@ import { TeamMember } from './teams/entities/team-member.entity';
       password: 'postgres',
       database:'chatbot',
       entities: [ ChatHistory,ChatSession, teams,TeamMember],
-      synchronize: true,
+      synchronize: false,
     }),
   ],
   controllers: [AppController, AuthController],

@@ -20,8 +20,9 @@ export class ChatbotController {
   @UseGuards(AuthGuard('jwt'))
   @Post('start-session')
   async startSession(@Request() req, @Body() body: CreateSessionDto) {
-    const userId = req.user?.userId || 'anonymous';
-    return this.chatbotService.startSession(userId, body.title);
+    const userId = req.user?.sub || 'anonymous';
+    if (!body.teamId) throw new BadRequestException('teamId is required');
+    return this.chatbotService.startSession(userId, body.title, body.teamId);
   }
   
  @UseGuards(AuthGuard('jwt'))
@@ -51,8 +52,9 @@ export class ChatbotController {
   }
   @UseGuards(AuthGuard('jwt'))
   @Get('messages')
-  async getMessages(@Query('sessionId') sessionId: string) {
+  async getMessages(@Query('sessionId') sessionId: string, @Request() req) {
     if (!sessionId) throw new BadRequestException('sessionId is required');
-    return this.chatbotService.getMessages(sessionId);
+    const userId = req.user?.sub || 'anonymous';
+    return this.chatbotService.getMessages(sessionId, userId);
   }
 }

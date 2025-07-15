@@ -31,6 +31,16 @@ export class TeamsController {
     return this.teamsService.getTeamsByUser(userId);
   }
 
+  @Get(':teamId/members')
+  @UseGuards(AuthGuard('jwt'))
+  async getTeamMembers(
+    @Param('teamId') teamId: string,
+    @Req() req: Request
+  ) {
+    const requesterId = String((req as any).user.sub);
+    return this.teamsService.getTeamMembers(Number(teamId), requesterId);
+  }
+
   @Post(':teamId/members')
   @UseGuards(AuthGuard('jwt'))
   async addMember(

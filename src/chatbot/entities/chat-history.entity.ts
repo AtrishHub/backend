@@ -29,6 +29,9 @@ export class ChatHistory {
   @Column()
   sessionId: string;
 
+  @Column()
+  teamId: number;
+
   @ManyToOne(() => ChatSession, (session) => session.messages, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'sessionId' })
   session: ChatSession;
