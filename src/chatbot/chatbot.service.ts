@@ -5,7 +5,7 @@ import { Repository, In } from 'typeorm';
 import { ChatHistory } from './entities/chat-history.entity';
 import { ChatSession } from './entities/chat-session.entity';
 import { ChatOpenAI } from '@langchain/openai';
-import { HumanMessage } from '@langchain/core/messages';
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { TeamMember } from '../teams/entities/team-member.entity';
 import { Readable } from 'stream';
 
@@ -34,17 +34,40 @@ export class ChatbotService {
     const session = this.sessionRepo.create({ userId, title, teamId });
     return this.sessionRepo.save(session);
   }
-
   async chat(userId: string, sessionId: string, message: string): Promise<string> {
     const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
     if (!session) throw new NotFoundException('Session not found');
-    // Check if user is a member of the team for this session
+  
+    // Check team membership
     const isMember = await this.memberRepo.findOne({ where: { teamId: session.teamId, userId } });
     if (!isMember) throw new ForbiddenException('Not a member of this team');
-
-    const result = await this.llm.invoke([new HumanMessage({ content: message })]);
+  
+    // ✅ Fetch full session history (oldest to latest)
+    const history = await this.historyRepo.find({
+      where: { sessionId },
+      order: { timestamp: 'ASC' },
+    });
+  
+    // ✅ Format history into LangChain message array
+    const contextMessages = history.flatMap((item) => {
+      return [
+        { role: 'user', content: item.message },
+        { role: 'assistant', content: item.response },
+      ];
+    }).flatMap((msg) => {
+      return msg.role === 'user'
+        ? [new HumanMessage(msg.content)]
+        : [new AIMessage(msg.content)];
+    });
+  
+    // ✅ Add current user input
+    contextMessages.push(new HumanMessage(message));
+  
+    // 🧠 Ask LLM with full context
+    const result = await this.llm.invoke(contextMessages);
     const response = typeof result === 'string' ? result : result?.content;
-
+  
+    // 💾 Save both messages
     await this.historyRepo.save({
       userId,
       message: String(message),
@@ -52,9 +75,29 @@ export class ChatbotService {
       sessionId,
       teamId: session.teamId,
     });
-
+  
     return typeof response === 'string' ? response : JSON.stringify(response);
   }
+  // async chat(userId: string, sessionId: string, message: string): Promise<string> {
+  //   const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+  //   if (!session) throw new NotFoundException('Session not found');
+  //   // Check if user is a member of the team for this session
+  //   const isMember = await this.memberRepo.findOne({ where: { teamId: session.teamId, userId } });
+  //   if (!isMember) throw new ForbiddenException('Not a member of this team');
+
+  //   const result = await this.llm.invoke([new HumanMessage({ content: message })]);
+  //   const response = typeof result === 'string' ? result : result?.content;
+
+  //   await this.historyRepo.save({
+  //     userId,
+  //     message: String(message),
+  //     response: String(response),
+  //     sessionId,
+  //     teamId: session.teamId,
+  //   });
+
+  //   return typeof response === 'string' ? response : JSON.stringify(response);
+  // }
 
   // Streaming version for SSE endpoint
   async chatStream(userId: string, sessionId: string, message: string): Promise<Readable> {
