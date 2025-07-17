@@ -1,4 +1,4 @@
-import { Controller,Post,Body,Get, Req, UseGuards, Param, Delete } from '@nestjs/common';
+import { Controller,Post,Body,Get, Req, UseGuards, Param, Delete, Patch, HttpException } from '@nestjs/common';
 import { Request } from 'express';
 import { CreateTeamDto } from './dto/create-teams.dto'; 
 import { TeamsService } from './teams.service';
@@ -24,12 +24,12 @@ export class TeamsController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
-  async getUserTeams(@Req() req: Request) {
+@UseGuards(AuthGuard('jwt'))
+async getUserTeams(@Req() req: Request) {
     // Extract userId from JWT payload's sub claim
     const userId = String((req as any).user.sub);
-    return this.teamsService.getTeamsByUser(userId);
-  }
+  return this.teamsService.getTeamsByUser(userId);
+}
 
   @Get(':teamId/members')
   @UseGuards(AuthGuard('jwt'))
@@ -61,6 +61,21 @@ export class TeamsController {
   ) {
     const requesterId = String((req as any).user.sub);
     return this.teamsService.removeMember(Number(teamId), userId, requesterId);
+  }
+
+  @Patch(':teamId')
+  @UseGuards(AuthGuard('jwt'))
+  async updateTeam(
+    @Param('teamId') teamId: string,
+    @Body() body: { teamName?: string; description?: string },
+    @Req() req: Request
+  ) {
+    const requesterId = String((req as any).user.sub);
+    try {
+      return await this.teamsService.updateTeam(Number(teamId), requesterId, body);
+    } catch (e) {
+      throw new HttpException(e.message, 403);
+    }
   }
 }
 

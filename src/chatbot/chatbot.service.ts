@@ -7,6 +7,7 @@ import { ChatSession } from './entities/chat-session.entity';
 import { ChatOpenAI } from '@langchain/openai';
 import { HumanMessage } from '@langchain/core/messages';
 import { TeamMember } from '../teams/entities/team-member.entity';
+import { Readable } from 'stream';
 
 @Injectable()
 export class ChatbotService {
@@ -53,6 +54,19 @@ export class ChatbotService {
     });
 
     return typeof response === 'string' ? response : JSON.stringify(response);
+  }
+
+  // Streaming version for SSE endpoint
+  async chatStream(userId: string, sessionId: string, message: string): Promise<Readable> {
+    const response = await this.chat(userId, sessionId, message);
+    // For demonstration, stream the full response as a single chunk
+    const stream = new Readable({
+      read() {
+        this.push(JSON.stringify({ response }));
+        this.push(null); // End the stream
+      }
+    });
+    return stream;
   }
 
   async getSessions(userId: string) {

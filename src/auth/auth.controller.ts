@@ -7,7 +7,7 @@ export class AuthController {
   @Get( )
   getSecret(@Req() req) {
     return {
-      message: "This is protected data",
+      message: "This is protected data By me ",
       user: req.user,
     };
   }

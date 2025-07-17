@@ -1,4 +1,4 @@
-// auth/jwt.strategy.ts
+
 import { Injectable } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { ExtractJwt, Strategy } from "passport-jwt";
@@ -13,10 +13,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         cache: true,
         rateLimit: true,
         jwksRequestsPerMinute: 5,
-        jwksUri: `https://dev-wqm3xbhp8jmn514q.us.auth0.com/.well-known/jwks.json`,
+        jwksUri: `https://${process.env.AUTH0_DOMAIN}/.well-known/jwks.json`,
       }),
-      audience:"https://chatbot/" ,
-      issuer: 'https://dev-wqm3xbhp8jmn514q.us.auth0.com/',
+      audience:process.env.AUTH0_AUDIENCE ,
+      issuer: `https://${process.env.AUTH0_DOMAIN}/`,
       algorithms: ["RS256"],
     });
   }

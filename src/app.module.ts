@@ -12,13 +12,14 @@ import { ChatSession } from './chatbot/entities/chat-session.entity';
 import { teams } from './teams/entities/teams.entity';
 import { ChatbotModule } from './chatbot/chatbot.module';
 import { TeamMember } from './teams/entities/team-member.entity';
+import { UserManagementModule } from './user-management/user-management.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Makes the ConfigService available globally
     }),
     AuthModule,
- ChatbotModule,TeamsModule,
+ ChatbotModule,TeamsModule,UserManagementModule,
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -30,6 +31,8 @@ import { TeamMember } from './teams/entities/team-member.entity';
       entities: [ ChatHistory,ChatSession, teams,TeamMember],
       synchronize: false,
     }),
+
+    UserManagementModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, JwtStrategy],

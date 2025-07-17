@@ -1,4 +1,3 @@
-// src/chatbot/chatbot.controller.ts
 import {
   Controller,
   Post,
@@ -8,11 +7,14 @@ import {
   Request,
   BadRequestException,
   UseGuards,
+  Res,
 } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
 import { MessageDto } from './dto/message.dto';
 import { CreateSessionDto } from './dto/create-session.dto';
 import { AuthGuard } from '@nestjs/passport';
+import { Response } from 'express';
+import * as readline from 'readline';
 @Controller('chatbot')
 export class ChatbotController {
   constructor(private readonly chatbotService: ChatbotService) {}
@@ -32,7 +34,7 @@ export class ChatbotController {
     if (!userMessage || !dto.sessionId)
       throw new BadRequestException('Invalid message or sessionId');
     const userId = req.user?.userId || 'anonymous';
-    const response = await this.chatbotService.chat(
+    const response = await this.chatbotService.chatStream(
       userId,
       dto.sessionId,
       userMessage.content,
@@ -41,6 +43,61 @@ export class ChatbotController {
       role: 'assistant',
       content: response,
     };
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Post('stream')
+  async streamChat(@Body() dto: MessageDto, @Request() req, @Res() res: Response) {
+    const userMessage = dto.messages?.find((m) => m.role === 'user');
+    if (!userMessage || !dto.sessionId)
+      throw new BadRequestException('Invalid message or sessionId');
+    const userId = req.user?.sub || 'anonymous';
+     
+    const stream = await this.chatbotService.chatStream(
+      userId,
+      dto.sessionId,
+      userMessage.content,
+    );
+    if (!stream) {
+      res.status(500).send('Failed to connect to chat stream');
+      return;
+    }
+    res.setHeader('Content-Type', 'text/event-stream; charset=utf-8');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    const rl = readline.createInterface({ input: stream });
+    let responseEnded = false;
+    const safeWrite = (data: string) => {
+      if (!responseEnded) {
+        res.write(data);
+      }
+    };
+    const safeEnd = () => {
+      if (!responseEnded) {
+        responseEnded = true;
+        res.end();
+      }
+    };
+    rl.on('line', (line) => {
+      try {
+        const data = JSON.parse(line);
+        if (typeof data.response === 'string') {
+          safeWrite(`data: ${JSON.stringify({ role: 'assistant', content: data.response })}\n\n`);
+        }
+        if (data.done) {
+          rl.close();
+          safeWrite('event: end\ndata: [DONE]\n\n');
+        }
+      } catch (e) {
+      
+      }
+    });
+    rl.on('close', () => {
+      safeEnd();
+    });
+    rl.on('error', () => {
+      safeEnd();
+    });
   }
 
   @UseGuards(AuthGuard('jwt'))

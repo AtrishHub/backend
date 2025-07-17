@@ -77,5 +77,20 @@ export class TeamsService {
     // Return all members
     return this.memberRepo.find({ where: { teamId } });
   }
+
+  async updateTeam(teamId: number, requesterId: string, update: { teamName?: string; description?: string }) {
+    // Check if requester is creator
+    const creator = await this.memberRepo.findOne({ where: { teamId, isCreator: true } });
+    if (!creator || creator.userId !== requesterId) {
+      throw new Error('Only the team creator can update the team');
+    }
+    const team = await this.teamRepo.findOne({ where: { teamId } });
+    if (!team) {
+      throw new Error('Team not found');
+    }
+    if (update.teamName !== undefined) team.teamName = update.teamName;
+    if (update.description !== undefined) team.description = update.description;
+    return this.teamRepo.save(team);
+  }
 }
 
