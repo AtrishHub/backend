@@ -1,5 +1,6 @@
 import { Controller, Get, Req, UseGuards } from "@nestjs/common";
 import { JwtAuthGuard } from "./jwt-auth.guard";
+import { IsNull } from 'typeorm';
 
 @Controller("auth")
 export class AuthController {

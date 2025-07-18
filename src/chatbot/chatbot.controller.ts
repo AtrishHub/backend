@@ -8,6 +8,7 @@ import {
   BadRequestException,
   UseGuards,
   Res,
+  Req,
 } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
 import { MessageDto } from './dto/message.dto';
@@ -113,5 +114,12 @@ export class ChatbotController {
     if (!sessionId) throw new BadRequestException('sessionId is required');
     const userId = req.user?.sub || 'anonymous';
     return this.chatbotService.getMessages(sessionId, userId);
+  }
+
+  @UseGuards(AuthGuard('jwt'))
+  @Get('history/organized')
+  async getOrganizedHistory(@Req() req) {
+    // Assumes req.user.sub is userId
+    return this.chatbotService.getUserChatHistoryOrganized(req.user.sub);
   }
 }

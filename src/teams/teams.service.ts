@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateTeamDto } from './dto/create-teams.dto';
 import { TeamMember } from './entities/team-member.entity';
+import { In } from 'typeorm';
 
 @Injectable()
 export class TeamsService {
@@ -32,7 +33,7 @@ export class TeamsService {
     const teamIds = memberships.map(m => m.teamId);
     if (teamIds.length === 0) return [];
     // Find all teams where the user is a member
-    const teamsList = await this.teamRepo.findByIds(teamIds);
+    const teamsList = await this.teamRepo.find({ where: { teamId: In(teamIds) } });
     // Sort by createdAt descending
     return teamsList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
@@ -91,6 +92,15 @@ export class TeamsService {
     if (update.teamName !== undefined) team.teamName = update.teamName;
     if (update.description !== undefined) team.description = update.description;
     return this.teamRepo.save(team);
+  }
+
+  async isUserMemberOfTeam(userId: string, teamId: number): Promise<boolean> {
+    const member = await this.memberRepo.findOne({
+      where: { userId, teamId },
+      relations: ['teams'],
+    });
+
+    return !!member;
   }
 }
 

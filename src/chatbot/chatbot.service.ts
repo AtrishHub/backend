@@ -134,4 +134,22 @@ export class ChatbotService {
       order: { timestamp: 'ASC' },
     });
   }
+
+  async getUserChatHistoryOrganized(userId: string) {
+    // Fetch all sessions for the user, including team and folder
+    const sessions = await this.sessionRepo.find({
+      where: { userId },
+      relations: ['folder', 'folder.team'],
+    });
+    // Group by team and folder
+    const result = {};
+    for (const session of sessions) {
+      const teamId = session.teamId;
+      const folderId = session.folderId || 'no-folder';
+      if (!result[teamId]) result[teamId] = {};
+      if (!result[teamId][folderId]) result[teamId][folderId] = [];
+      result[teamId][folderId].push(session);
+    }
+    return result;
+  }
 }
