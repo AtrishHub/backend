@@ -19,7 +19,7 @@ export class Folder {
   team: teams;
 
   @Column()
-  teamId: number;
+  teamId: string;
 
   @ManyToOne(() => Folder, folder => folder.children, { nullable: true, onDelete: 'CASCADE' })
   @JoinColumn({ name: 'parentId' })

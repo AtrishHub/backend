@@ -17,7 +17,7 @@ import {
     async canActivate(context: ExecutionContext): Promise<boolean> {
       const request: Request = context.switchToHttp().getRequest();
       const user = request.user; // should come from your JWT token
-      const teamId = Number(request.params.teamId || request.body.teamId);
+      const teamId = request.params.teamId || request.body.teamId;
   
       if (!teamId || !user?.sub) {
         throw new ForbiddenException('Missing team ID or user information');

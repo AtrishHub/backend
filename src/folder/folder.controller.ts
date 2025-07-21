@@ -15,7 +15,7 @@ export class FolderController {
   }
 
   @Get('team/:teamId')
-  findAllByTeam(@Param('teamId', ParseIntPipe) teamId: number) {
+  findAllByTeam(@Param('teamId') teamId: string) {
     return this.folderService.findAllByTeam(teamId);
   }
 
@@ -35,7 +35,7 @@ export class FolderController {
   }
 
   @Get('tree/:teamId')
-  getFolderTree(@Param('teamId', ParseIntPipe) teamId: number) {
+  getFolderTree(@Param('teamId') teamId: string) {
     return this.folderService.getFolderTree(teamId);
   }
 } 

@@ -27,7 +27,7 @@ export class ChatbotService {
     });
   }
 
-  async startSession(userId: string, title: string | undefined, teamId: number) {
+  async startSession(userId: string, title: string | undefined, teamId: string) {
     // Check if user is a member of the team
     const isMember = await this.memberRepo.findOne({ where: { teamId, userId } });
     if (!isMember) throw new ForbiddenException('Not a member of this team');

@@ -38,7 +38,7 @@ async getUserTeams(@Req() req: Request) {
     @Req() req: Request
   ) {
     const requesterId = String((req as any).user.sub);
-    return this.teamsService.getTeamMembers(Number(teamId), requesterId);
+    return this.teamsService.getTeamMembers(teamId, requesterId);
   }
 
   @Post(':teamId/members')
@@ -49,7 +49,7 @@ async getUserTeams(@Req() req: Request) {
     @Req() req: Request
   ) {
     const requesterId = String((req as any).user.sub);
-    return this.teamsService.addMember(Number(teamId), userId, requesterId);
+    return this.teamsService.addMember(teamId, userId, requesterId);
   }
 
   @Delete(':teamId/members/:userId')
@@ -60,7 +60,7 @@ async getUserTeams(@Req() req: Request) {
     @Req() req: Request
   ) {
     const requesterId = String((req as any).user.sub);
-    return this.teamsService.removeMember(Number(teamId), userId, requesterId);
+    return this.teamsService.removeMember(teamId, userId, requesterId);
   }
 
   @Patch(':teamId')
@@ -72,7 +72,7 @@ async getUserTeams(@Req() req: Request) {
   ) {
     const requesterId = String((req as any).user.sub);
     try {
-      return await this.teamsService.updateTeam(Number(teamId), requesterId, body);
+      return await this.teamsService.updateTeam(teamId, requesterId, body);
     } catch (e) {
       throw new HttpException(e.message, 403);
     }

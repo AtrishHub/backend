@@ -1,6 +1,6 @@
 export class CreateFolderDto {
   name: string;
   description?: string;
-  teamId: number;
+  teamId: string;
   parentId?: number;
 } 

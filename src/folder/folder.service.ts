@@ -14,7 +14,7 @@ export class FolderService {
   ) {}
 
   async create(dto: CreateFolderDto) {
-    const folder = this.folderRepo.create(dto);
+    const folder = this.folderRepo.create({ ...dto, teamId: String(dto.teamId) });
     return this.folderRepo.save(folder);
   }
 
@@ -24,7 +24,7 @@ export class FolderService {
     return folder;
   }
 
-  async findAllByTeam(teamId: number) {
+  async findAllByTeam(teamId: string) {
     return this.folderRepo.find({ where: { teamId, parentId: IsNull() }, relations: ['children', 'sessions'] });
   }
 
@@ -41,7 +41,7 @@ export class FolderService {
     return this.folderRepo.remove(folder);
   }
 
-  async getFolderTree(teamId: number) {
+  async getFolderTree(teamId: string) {
     // Recursively fetch all folders for a team as a tree
     const roots = await this.folderRepo.find({ where: { teamId, parentId: IsNull() }, relations: ['children', 'sessions'] });
     const buildTree = async (folders: Folder[]): Promise<Folder[]> => {

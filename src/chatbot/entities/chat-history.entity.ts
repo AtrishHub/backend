@@ -30,7 +30,7 @@ export class ChatHistory {
   sessionId: string;
 
   @Column()
-  teamId: number;
+  teamId: string;
 
   @ManyToOne(() => ChatSession, (session) => session.messages, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'sessionId' })

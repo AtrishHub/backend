@@ -25,7 +25,7 @@ export class ChatbotController {
   async startSession(@Request() req, @Body() body: CreateSessionDto) {
     const userId = req.user?.sub || 'anonymous';
     if (!body.teamId) throw new BadRequestException('teamId is required');
-    return this.chatbotService.startSession(userId, body.title, body.teamId);
+    return this.chatbotService.startSession(userId, body.title, String(body.teamId));
   }
   
  @UseGuards(AuthGuard('jwt'))

@@ -13,15 +13,15 @@ export class ChatSession {
   @Column({ nullable: true })
   title: string;
 
+  @Column()
+  teamId: string;
+
   @Column({ nullable: true })
   folderId?: number;
 
   @ManyToOne(() => Folder, folder => folder.sessions, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'folderId' })
   folder?: Folder;
-
-  @Column()
-  teamId: number;
 
   @CreateDateColumn()
   createdAt: Date;

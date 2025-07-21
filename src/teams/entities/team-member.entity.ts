@@ -6,7 +6,7 @@ export class TeamMember {
   id: string;
 
   @Column() // references teams.teamId
-  teamId: number;
+  teamId: string;
 
   @Column()
   userId: string;

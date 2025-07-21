@@ -20,7 +20,7 @@ export class TeamsService {
     const savedTeam = await this.teamRepo.save(team);
     // Add creator as first member
     await this.memberRepo.save({
-      teamId: savedTeam.teamId, // now a number
+      teamId: savedTeam.teamId, // now a string (UUID)
       userId: dto.userId,
       isCreator: true,
     });
@@ -33,12 +33,12 @@ export class TeamsService {
     const teamIds = memberships.map(m => m.teamId);
     if (teamIds.length === 0) return [];
     // Find all teams where the user is a member
-    const teamsList = await this.teamRepo.find({ where: { teamId: In(teamIds) } });
+    const teamsList = await this.teamRepo.findByIds(teamIds);
     // Sort by createdAt descending
     return teamsList.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   }
 
-  async addMember(teamId: number, userId: string, requesterId: string) {
+  async addMember(teamId: string, userId: string, requesterId: string) {
     // Check if requester is creator
     const creator = await this.memberRepo.findOne({ where: { teamId, isCreator: true } });
     if (!creator || creator.userId !== requesterId) {
@@ -52,7 +52,7 @@ export class TeamsService {
     return this.memberRepo.save({ teamId, userId, isCreator: false });
   }
 
-  async removeMember(teamId: number, userId: string, requesterId: string) {
+  async removeMember(teamId: string, userId: string, requesterId: string) {
     // Check if requester is creator
     const creator = await this.memberRepo.findOne({ where: { teamId, isCreator: true } });
     if (!creator || creator.userId !== requesterId) {
@@ -69,7 +69,7 @@ export class TeamsService {
     return this.memberRepo.remove(member);
   }
 
-  async getTeamMembers(teamId: number, requesterId: string) {
+  async getTeamMembers(teamId: string, requesterId: string) {
     // Check if requester is the creator
     const creator = await this.memberRepo.findOne({ where: { teamId, isCreator: true } });
     if (!creator || creator.userId !== requesterId) {
@@ -79,7 +79,7 @@ export class TeamsService {
     return this.memberRepo.find({ where: { teamId } });
   }
 
-  async updateTeam(teamId: number, requesterId: string, update: { teamName?: string; description?: string }) {
+  async updateTeam(teamId: string, requesterId: string, update: { teamName?: string; description?: string }) {
     // Check if requester is creator
     const creator = await this.memberRepo.findOne({ where: { teamId, isCreator: true } });
     if (!creator || creator.userId !== requesterId) {
@@ -94,7 +94,7 @@ export class TeamsService {
     return this.teamRepo.save(team);
   }
 
-  async isUserMemberOfTeam(userId: string, teamId: number): Promise<boolean> {
+  async isUserMemberOfTeam(userId: string, teamId: string): Promise<boolean> {
     const member = await this.memberRepo.findOne({
       where: { userId, teamId },
       relations: ['teams'],
