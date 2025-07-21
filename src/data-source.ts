@@ -4,6 +4,7 @@ import { ChatSession } from './chatbot/entities/chat-session.entity';
 import { teams } from './teams/entities/teams.entity';
 import { TeamMember } from './teams/entities/team-member.entity';
 import { Folder } from './folder/entities/folder.entity';
+import { Upload } from './uploads/entities/upload.entity';
 
 export const AppDataSource = new DataSource({
   type: 'postgres',
@@ -13,7 +14,7 @@ export const AppDataSource = new DataSource({
   username: process.env.DB_USER || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_NAME || 'chatbot',
-  entities: [ChatHistory, ChatSession, teams, TeamMember,Folder],
+  entities: [ChatHistory, ChatSession, teams, TeamMember,Folder,Upload],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,
 }); 

@@ -15,13 +15,16 @@ import { TeamMember } from './teams/entities/team-member.entity';
 import { UserManagementModule } from './user-management/user-management.module';
 import { FolderModule } from './folder/folder.module';
 import { Folder } from './folder/entities/folder.entity';
+import { UploadsModule } from './uploads/uploads.module';
+import { DocumentsModule } from './documents/documents.module';
+import { Upload } from './uploads/entities/upload.entity';
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Makes the ConfigService available globally
     }),
     AuthModule,
- ChatbotModule,TeamsModule,UserManagementModule,FolderModule,
+ ChatbotModule,TeamsModule,UserManagementModule,FolderModule,UploadsModule,DocumentsModule,
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -30,12 +33,14 @@ import { Folder } from './folder/entities/folder.entity';
       username: 'postgres',
       password: 'postgres',
       database:'chatbot',
-      entities: [ ChatHistory,ChatSession, teams,TeamMember, Folder],
+      entities: [ ChatHistory,ChatSession, teams,TeamMember, Folder,Upload],
       synchronize: false,
     }),
 
     UserManagementModule,
     FolderModule,
+    UploadsModule,
+    DocumentsModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, JwtStrategy],

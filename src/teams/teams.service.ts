@@ -102,5 +102,9 @@ export class TeamsService {
 
     return !!member;
   }
+
+  async findOneById(teamId: string) {
+    return this.teamRepo.findOne({ where: { teamId } });
+  }
 }
 
