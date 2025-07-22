@@ -9,6 +9,8 @@ import {
   UseGuards,
   Res,
   Req,
+  Sse,
+  MessageEvent
 } from '@nestjs/common';
 import { ChatbotService } from './chatbot.service';
 import { MessageDto } from './dto/message.dto';
@@ -16,6 +18,15 @@ import { CreateSessionDto } from './dto/create-session.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { Response } from 'express';
 import * as readline from 'readline';
+import { Observable } from 'rxjs';
+import { AIMessage, HumanMessage } from '@langchain/core/messages';
+
+class RagChatDto {
+  question: string;
+  sessionId: string;
+  documentId: string; // The key differentiator for RAG chat
+}
+
 @Controller('chatbot')
 export class ChatbotController {
   constructor(private readonly chatbotService: ChatbotService) {}
@@ -98,6 +109,54 @@ export class ChatbotController {
     });
     rl.on('error', () => {
       safeEnd();
+    });
+  }
+
+  @Post('rag-stream')
+  @Sse()
+  async ragStream(
+    @Body() body: RagChatDto,
+    @Request() req,
+  ): Promise<Observable<MessageEvent>> {
+    const { question, sessionId, documentId } = body;
+    const userId = req.user.sub;
+
+    if (!documentId) {
+      throw new BadRequestException('documentId is required for RAG chat.');
+    }
+
+    const stream = await this.chatbotService.chatWithDocument(
+      userId,
+      documentId,
+      sessionId,
+      question,
+    );
+
+    return new Observable((observer) => {
+      (async () => {
+        let firstChunk = true;
+        for await (const chunk of stream) {
+          if (chunk.context && firstChunk) {
+            // Event 1: Send the source documents
+            observer.next({
+              type: 'sources',
+              data: chunk.context.map((doc: any) => ({
+                pageContent: doc.pageContent,
+                filename: doc.metadata.originalFilename,
+                pageNumber: doc.metadata.loc?.pageNumber,
+              })),
+            });
+            firstChunk = false;
+          }
+          if (chunk.answer) {
+            // Event 2: Stream the answer tokens
+            observer.next({ type: 'token', data: chunk.answer });
+          }
+        }
+        // Event 3: Signal the end of the stream
+        observer.next({ type: 'end', data: 'Stream finished.' });
+        observer.complete();
+      })();
     });
   }
 

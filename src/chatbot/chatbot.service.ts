@@ -8,6 +8,8 @@ import { ChatOpenAI } from '@langchain/openai';
 import { AIMessage, HumanMessage } from '@langchain/core/messages';
 import { TeamMember } from '../teams/entities/team-member.entity';
 import { Readable } from 'stream';
+import { RagChainService } from 'src/rag-chain/rag-chain.service';
+
 
 @Injectable()
 export class ChatbotService {
@@ -20,6 +22,7 @@ export class ChatbotService {
     private readonly sessionRepo: Repository<ChatSession>,
     @InjectRepository(TeamMember)
     private readonly memberRepo: Repository<TeamMember>,
+    private readonly ragChainService: RagChainService,
   ) {
     this.llm = new ChatOpenAI({
       openAIApiKey:  process.env.OPENAI_API_KEY,
@@ -100,6 +103,38 @@ export class ChatbotService {
   // }
 
   // Streaming version for SSE endpoint
+
+  async chatWithDocument(
+    userId: string,
+    documentId: string, // RAG-specific parameter
+    sessionId: string,
+
+    question: string,
+  ) {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+
+    const isMember = await this.memberRepo.findOne({ where: { teamId: session.teamId, userId } });
+    if (!isMember) throw new ForbiddenException('You do not have access to this session.');
+
+    const history = await this.historyRepo.find({
+      where: { sessionId },
+      order: { timestamp: 'ASC' },
+    });
+    const chatHistory: (HumanMessage | AIMessage)[] = [];
+    for (const h of history) {
+      chatHistory.push(new HumanMessage(h.message));
+      chatHistory.push(new AIMessage(h.response));
+    }
+
+    const retrievalChain = await this.ragChainService.getRetrievalChain(documentId);
+
+    // This returns the stream that will be handled by the controller
+    return retrievalChain.stream({
+      input: question,
+      chat_history: chatHistory,
+    });
+  }
   async chatStream(userId: string, sessionId: string, message: string): Promise<Readable> {
     const response = await this.chat(userId, sessionId, message);
     // For demonstration, stream the full response as a single chunk

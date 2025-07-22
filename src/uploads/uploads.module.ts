@@ -5,6 +5,7 @@ import { UploadsController } from './uploads.controller';
 import { UploadsService } from './uploads.service';
 import { Upload } from './entities/upload.entity';
 import { TeamsModule } from 'src/teams/teams.module';
+import { DocumentProcessingModule } from 'src/document-processing/document-processing.module';
 
 
 @Module({
@@ -14,6 +15,7 @@ import { TeamsModule } from 'src/teams/teams.module';
     MulterModule.register({
       dest: './uploads',
     }),
+    DocumentProcessingModule 
   ],
   controllers: [UploadsController],
   providers: [UploadsService],

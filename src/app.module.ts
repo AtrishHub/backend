@@ -18,6 +18,9 @@ import { Folder } from './folder/entities/folder.entity';
 import { UploadsModule } from './uploads/uploads.module';
 import { DocumentsModule } from './documents/documents.module';
 import { Upload } from './uploads/entities/upload.entity';
+import { DocumentProcessingModule } from './document-processing/document-processing.module';
+import { VectorStoreModule } from './vector-store/vector-store.module';
+import { RagChainModule } from './rag-chain/rag-chain.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,6 +44,9 @@ import { Upload } from './uploads/entities/upload.entity';
     FolderModule,
     UploadsModule,
     DocumentsModule,
+    DocumentProcessingModule,
+    VectorStoreModule,
+    RagChainModule,
   ],
   controllers: [AppController, AuthController],
   providers: [AppService, JwtStrategy],
