@@ -6,6 +6,7 @@ import {
     Body,
     UseGuards,
     Request,
+    Query,
   } from '@nestjs/common';
   import { FileInterceptor } from '@nestjs/platform-express';
   import { AuthGuard } from '@nestjs/passport'; 
@@ -26,11 +27,10 @@ import {
     @UseInterceptors(FileInterceptor('file'))
     async uploadFile(
       @UploadedFile(/*...your pipes...*/) file: Express.Multer.File,
-      @Body() body: FileUploadDto,
+      @Query('teamId') teamId: string,
       @Request() req, 
     ) {
-      const { teamId } = body;
-      const creatorId = req.user.id;
+      const creatorId = req.user.sub;
       const fileMetadata = {
         filename: file.originalname,
         filepath: file.path,

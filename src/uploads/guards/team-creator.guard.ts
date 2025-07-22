@@ -15,7 +15,7 @@ import {
       const request = context.switchToHttp().getRequest();
       const user = request.user; // Comes from your AuthGuard
       const teamId = request.body?.teamId || request.query?.teamId || request.params?.teamId;
-  
+      console.log('body:', request.body, 'query:', request.query, 'params:', request.params);
       if (!teamId) {
         // Or handle as a validation error
         throw new ForbiddenException('Team ID is missing.');

@@ -12,7 +12,7 @@ import { TeamsModule } from 'src/teams/teams.module';
     TypeOrmModule.forFeature([Upload]),
     TeamsModule,
     MulterModule.register({
-      // ... your multer config
+      dest: './uploads',
     }),
   ],
   controllers: [UploadsController],
