@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-
 import { PDFLoader } from '@langchain/community/document_loaders/fs/pdf';
 import { RecursiveCharacterTextSplitter } from 'langchain/text_splitter';
 import { VectorStoreService } from 'src/vector-store/vector-store.service';
@@ -18,11 +17,14 @@ export class DocumentProcessingService {
     });
     const splitDocs = await splitter.splitDocuments(docs);
 
-    const documentsWithMetadata = splitDocs.map((doc) => {
-      doc.metadata.documentId = documentId;
-      doc.metadata.originalFilename = originalFilename;
-      return doc;
-    });
+    const documentsWithMetadata = splitDocs.map((doc) => ({
+      pageContent: doc.pageContent,
+      metadata: {
+        documentId,
+        originalFilename,
+        ...doc.metadata,
+      }
+    }));
 
     await this.vectorStoreService.addDocuments(documentsWithMetadata);
   }

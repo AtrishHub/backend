@@ -10,15 +10,11 @@ export class DocumentEmbedding {
 
   @Column('text')
   pageContent: string;
-
+  
   // This column will store your vector embeddings.
   // The `1536` should match the dimensions of your embedding model (e.g., OpenAI's text-embedding-3-small).
-  @Column({
-    type: 'vector',
-    srid: 1536,
-    nullable: true,
-  })
-  embedding: any;
+  @Column({ type: 'float8', array: true })
+  embedding: number[];
 
   @Column('jsonb')
   metadata: object;

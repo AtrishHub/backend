@@ -15,7 +15,8 @@ export class VectorStoreService {
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     this.vectorStore = new PGVectorStore(this.embeddings, {
       pool,
-      tableName: 'document_embeddings', // Your vector table name
+      tableName: 'document_embedding', 
+   
     });
   }
 

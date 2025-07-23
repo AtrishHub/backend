@@ -21,13 +21,15 @@ import { Upload } from './uploads/entities/upload.entity';
 import { DocumentProcessingModule } from './document-processing/document-processing.module';
 import { VectorStoreModule } from './vector-store/vector-store.module';
 import { RagChainModule } from './rag-chain/rag-chain.module';
+import { DocumentEmbedding } from './vector-store/entities/document-embedding.entity';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // Makes the ConfigService available globally
     }),
     AuthModule,
- ChatbotModule,TeamsModule,UserManagementModule,FolderModule,UploadsModule,DocumentsModule,
+ ChatbotModule,TeamsModule,UserManagementModule,FolderModule,UploadsModule,DocumentsModule,RagChainModule,VectorStoreModule,DocumentProcessingModule,
 
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -36,7 +38,7 @@ import { RagChainModule } from './rag-chain/rag-chain.module';
       username: 'postgres',
       password: 'postgres',
       database:'chatbot',
-      entities: [ ChatHistory,ChatSession, teams,TeamMember, Folder,Upload],
+      entities: [ ChatHistory,ChatSession, teams,TeamMember, Folder,Upload,DocumentEmbedding],
       synchronize: false,
     }),
 

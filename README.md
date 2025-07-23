@@ -31,3 +31,41 @@ Commit the generated migration file to git so others can use it.
 - If you get errors about missing tables/columns, make sure you have run all migrations.
 - If you get errors about missing entity files, check your import paths in `src/data-source.ts` (use only relative imports).
 
+
+When we add another coloumn in the existing entity or table we have to run this command----
+
+npx ts-node ./node_modules/typeorm/cli.js migration:generate src/migrations/Add[YourNewColumnName]To[YourTableName] -d src/data-source.ts
+
+Example-- like we add new coloumn name:IsPersonal in the table Name: Teams then for this command is:--
+
+npx ts-node ./node_modules/typeorm/cli.js migration:generate src/migrations/AddIsPersonalToTeams -d src/data-source.ts
+
+This command update the migrations files in the code---
+
+Now we have to apply these Migrations in database for which we have to run command:---
+
+npx ts-node ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts
+
+
+----if we have to add new table-----
+
+like we have to add new table name:Teams the we have to do following things: 
+
+firstly update the data-source.ts file-- add teams entity in the file. 
+ 
+after that run command--
+
+npx ts-node ./node_modules/typeorm/cli.js migration:generate src/migrations/add-[entity name]-entity -d src/data-source.ts 
+
+example--
+
+npx ts-node ./node_modules/typeorm/cli.js migration:generate src/migrations/add-Teams-entity -d src/data-source.ts 
+
+after that apply migrations by running command--- 
+
+npx ts-node ./node_modules/typeorm/cli.js migration:run -d src/data-source.ts
+
+
+
+
+
