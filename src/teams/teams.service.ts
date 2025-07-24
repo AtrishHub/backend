@@ -15,13 +15,16 @@ export class TeamsService {
     private readonly memberRepo: Repository<TeamMember>,
   ) {}
 
-  async createTeam(dto: CreateTeamDto) {
-    const team = this.teamRepo.create(dto);
+  async createTeam(dto: CreateTeamDto, userId: string) {
+    const team = this.teamRepo.create({
+      ...dto,
+      userId, 
+    });
     const savedTeam = await this.teamRepo.save(team);
     // Add creator as first member
     await this.memberRepo.save({
       teamId: savedTeam.teamId, // now a string (UUID)
-      userId: dto.userId,
+      userId: userId,
       isCreator: true,
     });
     return savedTeam;

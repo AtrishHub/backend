@@ -5,8 +5,8 @@ import { ChatSession } from '../../chatbot/entities/chat-session.entity';
 
 @Entity('folders')
 export class Folder {
-  @PrimaryGeneratedColumn()
-  id: number;
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
   @Column()
   name: string;
@@ -26,7 +26,7 @@ export class Folder {
   parent?: Folder;
 
   @Column({ nullable: true })
-  parentId?: number;
+  parentId?: string;
 
   @OneToMany(() => Folder, folder => folder.parent)
   children: Folder[];

@@ -18,7 +18,7 @@ export class FolderService {
     return this.folderRepo.save(folder);
   }
 
-  async findById(id: number) {
+  async findById(id: string) {
     const folder = await this.folderRepo.findOne({ where: { id }, relations: ['children', 'parent', 'sessions'] });
     if (!folder) throw new NotFoundException('Folder not found');
     return folder;
@@ -28,14 +28,14 @@ export class FolderService {
     return this.folderRepo.find({ where: { teamId, parentId: IsNull() }, relations: ['children', 'sessions'] });
   }
 
-  async update(id: number, dto: UpdateFolderDto) {
+  async update(id: string, dto: UpdateFolderDto) {
     const folder = await this.folderRepo.findOne({ where: { id } });
     if (!folder) throw new NotFoundException('Folder not found');
     Object.assign(folder, dto);
     return this.folderRepo.save(folder);
   }
 
-  async delete(id: number) {
+  async delete(id: string) {
     const folder = await this.folderRepo.findOne({ where: { id } });
     if (!folder) throw new NotFoundException('Folder not found');
     return this.folderRepo.remove(folder);
