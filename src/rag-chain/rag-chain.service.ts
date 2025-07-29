@@ -17,7 +17,7 @@ export class RagChainService {
   constructor(private readonly vectorStoreService: VectorStoreService) {}
 
   async getRetrievalChain(documentId: string) {
-    const retriever = this.vectorStoreService.asRetriever(documentId);
+    const retriever = await this.vectorStoreService.asRetriever(documentId);
 
     const historyAwarePrompt = PromptTemplate.fromTemplate(`...`); // Add your history-aware prompt here
     const historyAwareRetrieverChain = await createHistoryAwareRetriever({

@@ -34,6 +34,59 @@ export class UploadsController {
     private readonly documentProcessingService: DocumentProcessingService,
   ) {}
 
+  @Post('test')
+  @ApiOperation({ summary: 'Test upload endpoint without authentication' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    description: 'File to upload for testing',
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'The file to upload.',
+        },
+      },
+    },
+  })
+  @ApiQuery({
+      name: 'teamId',
+      required: true,
+      type: String,
+      description: 'The ID of the team to associate the file with.'
+  })
+  @ApiResponse({ status: 201, description: 'File uploaded and embedded successfully.' })
+  @UseInterceptors(FileInterceptor('file'))
+  async testUploadFile(
+    @UploadedFile() file: Express.Multer.File,
+    @Query('teamId') teamId: string,
+  ) {
+    const creatorId = 'test-user-id';
+    const fileMetadata = {
+      filename: file.originalname,
+      filepath: file.path,
+      mimetype: file.mimetype,
+      teamId,
+      creatorId,
+    };
+
+    const record = await this.uploadsService.create(fileMetadata);
+
+    // Automatically process and embed the document
+    await this.documentProcessingService.process(
+      file.path,
+      record.id, // Use the upload record's id as documentId
+      file.originalname
+    );
+
+    return {
+      message: 'File uploaded and embedded successfully!',
+      data: record,
+      documentId: record.id,
+    };
+  }
+
   @Post()
   @ApiBearerAuth() // Indicates that this endpoint requires a JWT Bearer token
   @ApiOperation({ summary: 'Upload a file and associate it with a team' })
@@ -83,7 +136,8 @@ export class UploadsController {
     await this.documentProcessingService.process(
       file.path,
       record.id, // Use the upload record's id as documentId
-      file.originalname
+      file.originalname,
+      record.teamId // Pass teamId to embedding metadata
     );
 
     return {

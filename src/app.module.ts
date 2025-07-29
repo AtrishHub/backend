@@ -22,6 +22,7 @@ import { DocumentProcessingModule } from './document-processing/document-process
 import { VectorStoreModule } from './vector-store/vector-store.module';
 import { RagChainModule } from './rag-chain/rag-chain.module';
 import { DocumentEmbedding } from './vector-store/entities/document-embedding.entity';
+import { EmbeddingModule } from './embedding/embedding.module';
 
 @Module({
   imports: [
@@ -29,15 +30,15 @@ import { DocumentEmbedding } from './vector-store/entities/document-embedding.en
       isGlobal: true, // Makes the ConfigService available globally
     }),
     AuthModule,
- ChatbotModule,TeamsModule,UserManagementModule,FolderModule,UploadsModule,DocumentsModule,RagChainModule,VectorStoreModule,DocumentProcessingModule,
+ ChatbotModule,TeamsModule,UserManagementModule,FolderModule,UploadsModule,DocumentsModule,RagChainModule,VectorStoreModule,DocumentProcessingModule,EmbeddingModule,
 
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: 'localhost',
       port:  5432,
-      username: 'postgres',
-      password: 'postgres',
-      database:'chatbot',
+      username: 'admin',
+      password: 'admin',
+      database:'mydb',
       entities: [ ChatHistory,ChatSession, teams,TeamMember, Folder,Upload,DocumentEmbedding],
       synchronize: false,
     }),

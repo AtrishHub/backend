@@ -6,27 +6,66 @@ import { Document } from 'langchain/document';
 
 @Injectable()
 export class VectorStoreService {
-  private readonly vectorStore: PGVectorStore;
   private readonly embeddings = new OpenAIEmbeddings({
     openAIApiKey: process.env.OPENAI_API_KEY,
   });
 
-  constructor() {
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
-    this.vectorStore = new PGVectorStore(this.embeddings, {
-      pool,
-      tableName: 'document_embedding', 
-   
+  private getPool() {
+    return new Pool({
+      host: 'localhost',
+      port: 5432,
+      user: 'admin',
+      password: 'admin',
+      database: 'mydb',
     });
   }
 
   async addDocuments(documents: Document[]) {
-    return this.vectorStore.addDocuments(documents);
+    const pool = this.getPool();
+    const vectorStore = await PGVectorStore.initialize(this.embeddings, {
+      postgresConnectionOptions: {
+        host: 'localhost',
+        port: 5432,
+        user: 'admin',
+        password: 'admin',
+        database: 'mydb',
+      },
+      tableName: 'document_embedding',
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "embedding",
+        contentColumnName: "pageContent",
+        metadataColumnName: "metadata"
+      },
+    });
+
+    return vectorStore.addDocuments(documents);
   }
 
-  asRetriever(documentId: string) {
-    return this.vectorStore.asRetriever({
-      filter: { documentId },
+  async asRetriever(documentId: string) {
+    const vectorStore = await PGVectorStore.initialize(this.embeddings, {
+      postgresConnectionOptions: {
+        host: 'localhost',
+        port: 5432,
+        user: 'admin',
+        password: 'admin',
+        database: 'mydb',
+      },
+      tableName: 'document_embedding',
+      columns: {
+        idColumnName: "id",
+        vectorColumnName: "embedding",
+        contentColumnName: "pageContent",
+        metadataColumnName: "metadata"
+      },
     });
+
+    if (documentId) {
+      return vectorStore.asRetriever({
+        filter: { documentId },
+      });
+    } else {
+      return vectorStore.asRetriever();
+    }
   }
 }

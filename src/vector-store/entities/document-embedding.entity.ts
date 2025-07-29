@@ -1,21 +1,28 @@
-import { Entity, PrimaryGeneratedColumn, Column, Index } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  Index,
+  CreateDateColumn,
+} from 'typeorm';
 
-@Entity()
+@Entity('document_embedding')
 export class DocumentEmbedding {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  documentId: string; // Foreign key to your Upload entity
+  documentId: string;
 
   @Column('text')
   pageContent: string;
-  
-  // This column will store your vector embeddings.
-  // The `1536` should match the dimensions of your embedding model (e.g., OpenAI's text-embedding-3-small).
-  @Column({ type: 'float8', array: true })
-  embedding: number[];
 
-  @Column('jsonb')
-  metadata: object;
+  @Column('text')
+  embedding: string; // Store as text, will be converted to vector in database
+
+  @Column({ type: 'jsonb', nullable: true })
+  metadata: Record<string, any>;
+
+  @CreateDateColumn()
+  createdAt: Date;
 }

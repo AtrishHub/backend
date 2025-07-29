@@ -12,9 +12,9 @@ export const AppDataSource = new DataSource({
   host: process.env.DB_HOST || 'localhost',
   port: parseInt(process.env.DB_PORT || '5432'),
 
-  username: process.env.DB_USER || 'postgres',
-  password: process.env.DB_PASSWORD || 'postgres',
-  database: process.env.DB_NAME || 'chatbot',
+  username: process.env.DB_USER || 'admin',
+  password: process.env.DB_PASSWORD || 'admin',
+  database: process.env.DB_NAME || 'mydb',
   entities: [ChatHistory, ChatSession, teams, TeamMember,Folder,Upload,DocumentEmbedding],
   migrations: ['src/migrations/*.ts'],
   synchronize: false,

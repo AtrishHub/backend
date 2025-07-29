@@ -1,0 +1,11 @@
+This is a test document for testing document embeddings.
+
+NestJS is a progressive Node.js framework for building efficient, reliable, and scalable server-side applications. It uses TypeScript and provides excellent developer experience with features like dependency injection, decorators, and modular architecture.
+
+TypeScript is a strongly typed programming language that builds on JavaScript, giving you better tooling at any scale. It adds optional static typing, classes, and modules to JavaScript.
+
+PostgreSQL is a powerful, open source object-relational database system with over 30 years of active development that has earned it a strong reputation for reliability, feature robustness, and performance.
+
+Vector embeddings are numerical representations of text that capture semantic meaning. They allow us to perform similarity searches and find related content based on meaning rather than just keywords.
+
+Machine learning models can understand context through vector similarity, enabling applications like semantic search, recommendation systems, and natural language processing. 
