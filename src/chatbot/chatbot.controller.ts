@@ -67,6 +67,13 @@ export class ChatbotController {
     const userMessage = dto.messages?.find((m) => m.role === 'user');
     if (!userMessage || !dto.sessionId)
       throw new BadRequestException('Invalid message or sessionId');
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(dto.sessionId)) {
+      throw new BadRequestException('Invalid sessionId format. Must be a valid UUID.');
+    }
+    
     const userId = req.user?.userId || 'anonymous';
     const response = await this.chatbotService.chatStream(
       userId,
@@ -94,6 +101,13 @@ export class ChatbotController {
     const userMessage = dto.messages?.find((m) => m.role === 'user');
     if (!userMessage || !dto.sessionId)
       throw new BadRequestException('Invalid message or sessionId');
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(dto.sessionId)) {
+      throw new BadRequestException('Invalid sessionId format. Must be a valid UUID.');
+    }
+    
     const userId = req.user?.sub || 'anonymous';
      
     const stream = await this.chatbotService.chatStream(
@@ -143,6 +157,7 @@ export class ChatbotController {
     });
   }
 
+  @UseGuards(AuthGuard('jwt'))
   @Post('rag-stream')
   @Sse()
   @ApiOperation({ summary: 'Start a RAG chat stream with a document' })
@@ -175,6 +190,7 @@ export class ChatbotController {
     description: "Returns an SSE stream with event types: 'sources' (initial context), 'token' (response chunks), and 'end'.",
   })
   @ApiResponse({ status: 400, description: 'Bad Request: documentId is required.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async ragStream(
     @Body() body: RagChatDto,
     @Request() req,
@@ -184,6 +200,12 @@ export class ChatbotController {
 
     if (!documentId) {
       throw new BadRequestException('documentId is required for RAG chat.');
+    }
+
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(sessionId)) {
+      throw new BadRequestException('Invalid sessionId format. Must be a valid UUID.');
     }
 
     const stream = await this.chatbotService.chatWithDocument(
@@ -196,6 +218,8 @@ export class ChatbotController {
     return new Observable((observer) => {
       (async () => {
         let firstChunk = true;
+        let fullResponse = '';
+        
         for await (const chunk of stream) {
           if (chunk.context && firstChunk) {
             // Event 1: Send the source documents
@@ -211,9 +235,18 @@ export class ChatbotController {
           }
           if (chunk.answer) {
             // Event 2: Stream the answer tokens
+            fullResponse += chunk.answer;
             observer.next({ type: 'token', data: chunk.answer });
           }
         }
+        
+        // Save the conversation to history
+        try {
+          await this.chatbotService.saveChatHistory(userId, sessionId, question, fullResponse);
+        } catch (error) {
+          console.error('Failed to save chat history:', error);
+        }
+        
         // Event 3: Signal the end of the stream
         observer.next({ type: 'end', data: 'Stream finished.' });
         observer.complete();
@@ -239,6 +272,13 @@ export class ChatbotController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async getMessages(@Query('sessionId') sessionId: string, @Request() req) {
     if (!sessionId) throw new BadRequestException('sessionId is required');
+    
+    // Validate UUID format
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(sessionId)) {
+      throw new BadRequestException('Invalid sessionId format. Must be a valid UUID.');
+    }
+    
     const userId = req.user?.sub || 'anonymous';
     return this.chatbotService.getMessages(sessionId, userId);
   }

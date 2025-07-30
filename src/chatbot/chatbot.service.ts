@@ -108,7 +108,6 @@ export class ChatbotService {
     userId: string,
     documentId: string, // RAG-specific parameter
     sessionId: string,
-
     question: string,
   ) {
     const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
@@ -117,23 +116,55 @@ export class ChatbotService {
     const isMember = await this.memberRepo.findOne({ where: { teamId: session.teamId, userId } });
     if (!isMember) throw new ForbiddenException('You do not have access to this session.');
 
+    // Get recent conversation history (last 10 exchanges to keep context manageable)
     const history = await this.historyRepo.find({
       where: { sessionId },
-      order: { timestamp: 'ASC' },
+      order: { timestamp: 'DESC' },
+      take: 20, // Last 20 messages (10 exchanges)
     });
-    const chatHistory: (HumanMessage | AIMessage)[] = [];
-    for (const h of history) {
-      chatHistory.push(new HumanMessage(h.message));
-      chatHistory.push(new AIMessage(h.response));
-    }
+    
+    // Reverse to get chronological order
+    const chronologicalHistory = history.reverse();
+    
+    // Build conversation history context
+    const conversationHistory = this.formatConversationHistory(chronologicalHistory);
+    
+    // Debug logging
+    console.log(`Session ${sessionId}: Found ${chronologicalHistory.length} previous messages`);
+    console.log(`Conversation history length: ${conversationHistory.length} characters`);
 
     const retrievalChain = await this.ragChainService.getRetrievalChain(documentId);
 
     // This returns the stream that will be handled by the controller
     return retrievalChain.stream({
       input: question,
-      chat_history: chatHistory,
+      chat_history: conversationHistory,
     });
+  }
+
+  async saveChatHistory(userId: string, sessionId: string, message: string, response: string) {
+    const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
+    if (!session) throw new NotFoundException('Session not found');
+
+    await this.historyRepo.save({
+      userId,
+      message: String(message),
+      response: String(response),
+      sessionId,
+      teamId: session.teamId,
+    });
+  }
+
+  private formatConversationHistory(history: any[]): string {
+    if (history.length === 0) {
+      return 'No previous conversation history.';
+    }
+
+    let formattedHistory = 'Previous conversation:\n';
+    for (const h of history) {
+      formattedHistory += `User: ${h.message}\nAssistant: ${h.response}\n\n`;
+    }
+    return formattedHistory;
   }
   async chatStream(userId: string, sessionId: string, message: string): Promise<Readable> {
     const response = await this.chat(userId, sessionId, message);
@@ -148,7 +179,6 @@ export class ChatbotService {
   }
 
   async getSessions(userId: string) {
-    // Return all sessions where the user is a member of the team
     const memberships = await this.memberRepo.find({ where: { userId } });
     const teamIds = memberships.map(m => m.teamId);
     if (teamIds.length === 0) return [];
@@ -161,7 +191,6 @@ export class ChatbotService {
   async getMessages(sessionId: string, userId: string) {
     const session = await this.sessionRepo.findOne({ where: { id: sessionId } });
     if (!session) throw new NotFoundException('Session not found');
-    // Check if user is a member of the team for this session
     const isMember = await this.memberRepo.findOne({ where: { teamId: session.teamId, userId } });
     if (!isMember) throw new ForbiddenException('Not a member of this team');
     return this.historyRepo.find({
@@ -171,12 +200,11 @@ export class ChatbotService {
   }
 
   async getUserChatHistoryOrganized(userId: string) {
-    // Fetch all sessions for the user, including team and folder
     const sessions = await this.sessionRepo.find({
       where: { userId },
       relations: ['folder', 'folder.team'],
     });
-    // Group by team and folder
+ 
     const result = {};
     for (const session of sessions) {
       const teamId = session.teamId;
